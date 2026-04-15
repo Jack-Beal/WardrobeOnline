@@ -152,32 +152,10 @@ Storage: bucket called `wardrobe-images`, public read access.
 Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 
 ### [x] Feature 1 — Project scaffold & design system
-- Create all files and folders listed in the file structure above (empty stubs where needed)
-- Implement full CSS design system in `css/style.css` including all colour variables, typography, layout base, bottom nav styles, button styles, chip styles, card styles, paper texture background
-- Create `index.html` with login/signup form styled to the design system (two views: login and signup, toggle between them)
-- Create `app.html` shell with bottom nav bar (4 tabs: Wardrobe, Outfits, Plan, Stats), tab content areas (empty for now), and all script/style tags loaded in correct order
-- Create `manifest.json` for PWA
-- Create `config.example.js` with empty placeholder values
-- Create `.gitignore` ignoring `js/config.js`
-- Create `supabase/schema.sql` with the full schema above
-- Do NOT create `js/config.js` itself — leave that for the user to fill in
 
 ### [x] Feature 2 — Auth
-- Implement `js/supabase.js`: init Supabase client from config values
-- Implement `js/auth.js`: login, signup, logout via Supabase Auth
-- On `index.html` submit: call Supabase signIn or signUp, redirect to `app.html` on success, show error message on failure
-- On `app.html` load: check session via `supabase.auth.getSession()`, redirect to `index.html` if no session
-- Add logout button in app header
-- Implement `js/app.js`: tab switching logic — show/hide tab panels, highlight active nav item
 
 ### [x] Feature 3 — Wardrobe tab: display & filters
-- Implement wardrobe item fetching from Supabase in `js/wardrobe.js`
-- Render items as staggered 3-column grid with the design system card style
-- Each card: photo (or placeholder if no image), name, category badge, wear count badge, laundry status coloured dot (green=clean, amber=dirty, blue=washing)
-- Category filter chips: All / Tops / Bottoms / Shoes / Outerwear / Accessories / Bags
-- Collapsible secondary filters: colour, season, brand (dropdowns populated from existing item values)
-- Laundry status tap to cycle: clean → dirty → washing → clean (updates Supabase immediately)
-- Empty state when no items
 
 ### [x] Feature 4 — Wardrobe tab: add & edit items
 - "Add item" floating button (bottom right, above nav)
@@ -194,7 +172,6 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 - "Worn today" button on each outfit card → create outfit_log entry, increment wear_count on all items in the outfit, update last_worn to today
 
 ### [skip] Feature 6 — AI outfit rating
-- Skipped: no Anthropic API key available (Claude Pro plan does not include API access)
 
 ### [x] Feature 7 — Plan tab: calendar
 - Implement `js/plan.js`
