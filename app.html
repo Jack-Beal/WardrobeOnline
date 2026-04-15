@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#4a5e3a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Wardrobe">
+  <meta name="description" content="Your digital wardrobe companion">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Wardrobe</title>
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- App Header -->
+    <header class="app-header">
+      <span class="app-header-title">👗 Wardrobe</span>
+      <div class="app-header-actions">
+        <button class="logout-btn" id="logout-btn" title="Sign out">⏻</button>
+      </div>
+    </header>
+
+    <!-- ===== WARDROBE TAB ===== -->
+    <div class="tab-panel active" id="tab-wardrobe">
+      <div class="page-content">
+
+        <!-- Weather strip -->
+        <div id="weather-strip" class="weather-strip" style="display:none">
+          <span class="weather-icon" id="weather-icon">🌤</span>
+          <span class="weather-temp" id="weather-temp">--°C</span>
+          <span id="weather-condition">Loading...</span>
+          <button class="btn btn-sm btn-ghost" style="margin-left:auto" id="suggest-outfit-btn">Suggest outfit</button>
+        </div>
+
+        <!-- Filter chips -->
+        <div class="filter-chips" id="category-chips">
+          <button class="chip active" data-category="all">All</button>
+          <button class="chip inactive" data-category="Tops">Tops</button>
+          <button class="chip inactive" data-category="Bottoms">Bottoms</button>
+          <button class="chip inactive" data-category="Shoes">Shoes</button>
+          <button class="chip inactive" data-category="Outerwear">Outerwear</button>
+          <button class="chip inactive" data-category="Accessories">Accessories</button>
+          <button class="chip inactive" data-category="Bags">Bags</button>
+        </div>
+
+        <!-- Secondary filters -->
+        <div class="secondary-filters">
+          <button class="secondary-filters-toggle" id="secondary-filters-toggle">
+            <span>Filters</span>
+            <span class="toggle-arrow">▼</span>
+          </button>
+          <div class="secondary-filters-body" id="secondary-filters-body">
+            <select class="filter-select" id="filter-colour">
+              <option value="">All colours</option>
+            </select>
+            <select class="filter-select" id="filter-season">
+              <option value="">All seasons</option>
+              <option value="Spring">Spring</option>
+              <option value="Summer">Summer</option>
+              <option value="Autumn">Autumn</option>
+              <option value="Winter">Winter</option>
+              <option value="All Season">All Season</option>
+            </select>
+            <select class="filter-select" id="filter-brand">
+              <option value="">All brands</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Wardrobe grid -->
+        <div id="wardrobe-grid-container">
+          <div class="loading-spinner"><div class="spinner"></div> Loading wardrobe…</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== OUTFITS TAB ===== -->
+    <div class="tab-panel" id="tab-outfits">
+      <div class="page-content">
+        <div id="outfits-container">
+          <div class="loading-spinner"><div class="spinner"></div> Loading outfits…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PLAN TAB ===== -->
+    <div class="tab-panel" id="tab-plan">
+      <div class="page-content">
+        <div id="plan-container">
+          <div class="loading-spinner"><div class="spinner"></div> Loading planner…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STATS TAB ===== -->
+    <div class="tab-panel" id="tab-stats">
+      <div class="page-content">
+        <div id="stats-container">
+          <div class="loading-spinner"><div class="spinner"></div> Loading stats…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BOTTOM NAV ===== -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="wardrobe">
+        <span class="nav-icon">👗</span>
+        <span class="nav-label">Wardrobe</span>
+      </button>
+      <button class="nav-item" data-tab="outfits">
+        <span class="nav-icon">✨</span>
+        <span class="nav-label">Outfits</span>
+      </button>
+      <button class="nav-item" data-tab="plan">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">Plan</span>
+      </button>
+      <button class="nav-item" data-tab="stats">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Stats</span>
+      </button>
+    </nav>
+
+  </div><!-- /.app-shell -->
+
+  <!-- ===== WARDROBE FAB ===== -->
+  <button class="fab" id="wardrobe-fab" title="Add item">＋</button>
+
+  <!-- ===== OUTFITS FAB ===== -->
+  <button class="fab" id="outfits-fab" title="New outfit" style="display:none">＋</button>
+
+  <!-- ===== DAY DETAIL PANEL ===== -->
+  <div class="modal-overlay" id="day-detail-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" id="day-detail-title">Tuesday 15 April</h2>
+        <button class="modal-close" id="day-detail-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Planned outfit view -->
+        <div id="day-has-outfit" style="display:none">
+          <div class="outfit-thumbnails" id="day-outfit-thumbs" style="margin-bottom:10px"></div>
+          <p id="day-outfit-name" style="font-weight:600;margin-bottom:4px"></p>
+          <p id="day-outfit-items-count" style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px"></p>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-secondary" style="flex:1" id="day-change-outfit-btn">Change</button>
+            <button class="btn btn-primary"   style="flex:1" id="day-mark-worn-btn">Mark as worn</button>
+          </div>
+          <p id="day-worn-indicator" style="display:none;text-align:center;margin-top:12px;font-size:0.85rem;color:var(--secondary);font-weight:600">✓ Worn</p>
+        </div>
+        <!-- Empty day view -->
+        <div id="day-no-outfit">
+          <div class="empty-state" style="padding:24px 0">
+            <span class="empty-state-icon">📅</span>
+            <p class="empty-state-desc">No outfit planned for this day.</p>
+          </div>
+          <button class="btn btn-primary" id="day-plan-outfit-btn">Plan outfit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PLAN OUTFIT MODAL ===== -->
+  <div class="modal-overlay" id="plan-outfit-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" id="plan-outfit-title">Plan outfit</h2>
+        <button class="modal-close" id="plan-outfit-close">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Mode toggle -->
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button class="chip active" id="plan-mode-saved"   data-mode="saved">Saved outfits</button>
+          <button class="chip inactive" id="plan-mode-items" data-mode="items">Pick items</button>
+        </div>
+
+        <!-- Saved outfits list -->
+        <div id="plan-saved-outfits-view">
+          <div id="plan-outfit-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto"></div>
+        </div>
+
+        <!-- Item picker -->
+        <div id="plan-items-view" style="display:none">
+          <input type="text" id="plan-item-search" placeholder="Search items…" style="margin-bottom:10px;width:100%;padding:10px 12px;border:1.5px solid var(--surface-alt);border-radius:10px;background:var(--bg);font-size:0.9rem;outline:none">
+          <div class="item-picker-grid" id="plan-item-picker"></div>
+          <p id="plan-items-selected-count" style="font-size:0.82rem;color:var(--text-muted);margin-top:8px"></p>
+        </div>
+
+        <div id="plan-outfit-error" class="error-msg mt-12"></div>
+        <button class="btn btn-primary mt-12" id="plan-outfit-save-btn">Save plan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADD / EDIT ITEM MODAL ===== -->
+  <div class="modal-overlay" id="item-modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" id="item-modal-title">Add item</h2>
+        <button class="modal-close" id="item-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="item-form" novalidate>
+          <input type="hidden" id="item-id">
+
+          <div class="form-group">
+            <label for="item-name">Name *</label>
+            <input type="text" id="item-name" placeholder="e.g. White linen shirt" required>
+          </div>
+
+          <div class="form-group">
+            <label for="item-category">Category *</label>
+            <select id="item-category" required>
+              <option value="">Select category</option>
+              <option>Tops</option>
+              <option>Bottoms</option>
+              <option>Shoes</option>
+              <option>Outerwear</option>
+              <option>Accessories</option>
+              <option>Bags</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="item-colour">Colour *</label>
+            <input type="text" id="item-colour" placeholder="e.g. White" required>
+          </div>
+
+          <div class="form-group">
+            <label for="item-season">Season *</label>
+            <select id="item-season" required>
+              <option value="">Select season</option>
+              <option>Spring</option>
+              <option>Summer</option>
+              <option>Autumn</option>
+              <option>Winter</option>
+              <option>All Season</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="item-brand">Brand</label>
+            <input type="text" id="item-brand" placeholder="e.g. Arket">
+          </div>
+
+          <div class="form-group">
+            <label for="item-care">Care notes</label>
+            <textarea id="item-care" placeholder="e.g. 30°C wash, lay flat to dry"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="item-laundry">Laundry status</label>
+            <select id="item-laundry">
+              <option value="clean">Clean</option>
+              <option value="dirty">Dirty</option>
+              <option value="washing">In wash</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Photo</label>
+            <div class="file-input-wrapper">
+              <div class="file-input-label" id="file-input-label">📷 Tap to add photo</div>
+              <input type="file" id="item-photo" accept="image/*" capture="environment">
+            </div>
+            <img class="photo-preview" id="photo-preview" alt="Preview">
+          </div>
+
+          <div id="item-form-error" class="error-msg"></div>
+
+          <button type="submit" class="btn btn-primary mt-16" id="item-submit-btn">Save item</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CREATE OUTFIT MODAL ===== -->
+  <div class="modal-overlay" id="outfit-modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">New outfit</h2>
+        <button class="modal-close" id="outfit-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="outfit-name">Outfit name *</label>
+          <input type="text" id="outfit-name" placeholder="e.g. Sunday brunch">
+        </div>
+
+        <div class="form-group">
+          <label>Pick items</label>
+          <input type="text" id="outfit-item-search" placeholder="Search items…" style="margin-bottom:10px">
+          <div class="item-picker-grid" id="outfit-item-picker"></div>
+        </div>
+
+        <p id="outfit-selected-count" style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px"></p>
+
+        <div id="outfit-form-error" class="error-msg"></div>
+
+        <button class="btn btn-primary" id="outfit-save-btn">Save outfit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ITEM DETAIL VIEW ===== -->
+  <div class="item-detail-overlay" id="item-detail-overlay">
+    <div style="position:relative">
+      <img class="item-detail-photo" id="detail-photo" alt="" style="display:none">
+      <div class="item-detail-photo-placeholder" id="detail-photo-placeholder">👗</div>
+      <button class="item-detail-back" id="detail-back-btn">←</button>
+    </div>
+    <div class="item-detail-content">
+      <h1 class="item-detail-name" id="detail-name"></h1>
+      <div class="item-detail-meta" id="detail-meta"></div>
+
+      <div class="item-detail-row">
+        <span class="item-detail-row-label">Colour</span>
+        <span id="detail-colour"></span>
+      </div>
+      <div class="item-detail-row">
+        <span class="item-detail-row-label">Season</span>
+        <span id="detail-season"></span>
+      </div>
+      <div class="item-detail-row">
+        <span class="item-detail-row-label">Brand</span>
+        <span id="detail-brand">—</span>
+      </div>
+      <div class="item-detail-row">
+        <span class="item-detail-row-label">Wear count</span>
+        <span id="detail-wear-count">0</span>
+      </div>
+      <div class="item-detail-row">
+        <span class="item-detail-row-label">Last worn</span>
+        <span id="detail-last-worn">—</span>
+      </div>
+      <div class="item-detail-row">
+        <span class="item-detail-row-label">Laundry</span>
+        <span id="detail-laundry"></span>
+      </div>
+      <div class="item-detail-row" id="detail-care-row">
+        <span class="item-detail-row-label">Care notes</span>
+        <span id="detail-care" style="text-align:right;max-width:60%"></span>
+      </div>
+
+      <div class="item-detail-actions">
+        <button class="btn btn-secondary" id="detail-edit-btn">Edit</button>
+        <button class="btn btn-danger" id="detail-delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts — loaded in dependency order -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/wardrobe.js"></script>
+  <script src="js/outfits.js"></script>
+  <script src="js/plan.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/pdf.js"></script>
+</body>
+</html>

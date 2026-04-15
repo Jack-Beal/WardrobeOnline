@@ -7,7 +7,6 @@ You are building a digital wardrobe PWA called "Wardrobe". Work through the chec
 ## Stack
 - Vanilla HTML/CSS/JS only — no frameworks, no build tools, no npm
 - Supabase JS client (via CDN) for database, storage, and auth
-- Anthropic API (raw fetch) for AI outfit rating
 - Open-Meteo API (free, no key needed) for Dundee weather
 - jsPDF (CDN) for PDF export
 - Deployable to GitHub Pages as static files — no server needed
@@ -22,7 +21,7 @@ manifest.json        PWA manifest
 css/
   style.css          all styles
 js/
-  config.js          SUPABASE_URL, SUPABASE_ANON_KEY, ANTHROPIC_API_KEY (gitignored)
+  config.js          SUPABASE_URL, SUPABASE_ANON_KEY (gitignored)
   supabase.js        supabase client init
   auth.js            login/signup logic
   app.js             tab routing, nav, shared state
@@ -30,7 +29,6 @@ js/
   outfits.js         outfits tab
   plan.js            planner tab
   stats.js           stats tab
-  ai.js              Anthropic API calls
   weather.js         Open-Meteo weather fetch
   pdf.js             PDF export
 supabase/
@@ -153,7 +151,7 @@ Storage: bucket called `wardrobe-images`, public read access.
 
 Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 
-### [ ] Feature 1 — Project scaffold & design system
+### [x] Feature 1 — Project scaffold & design system
 - Create all files and folders listed in the file structure above (empty stubs where needed)
 - Implement full CSS design system in `css/style.css` including all colour variables, typography, layout base, bottom nav styles, button styles, chip styles, card styles, paper texture background
 - Create `index.html` with login/signup form styled to the design system (two views: login and signup, toggle between them)
@@ -164,7 +162,7 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 - Create `supabase/schema.sql` with the full schema above
 - Do NOT create `js/config.js` itself — leave that for the user to fill in
 
-### [ ] Feature 2 — Auth
+### [x] Feature 2 — Auth
 - Implement `js/supabase.js`: init Supabase client from config values
 - Implement `js/auth.js`: login, signup, logout via Supabase Auth
 - On `index.html` submit: call Supabase signIn or signUp, redirect to `app.html` on success, show error message on failure
@@ -172,7 +170,7 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 - Add logout button in app header
 - Implement `js/app.js`: tab switching logic — show/hide tab panels, highlight active nav item
 
-### [ ] Feature 3 — Wardrobe tab: display & filters
+### [x] Feature 3 — Wardrobe tab: display & filters
 - Implement wardrobe item fetching from Supabase in `js/wardrobe.js`
 - Render items as staggered 3-column grid with the design system card style
 - Each card: photo (or placeholder if no image), name, category badge, wear count badge, laundry status coloured dot (green=clean, amber=dirty, blue=washing)
@@ -181,31 +179,24 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 - Laundry status tap to cycle: clean → dirty → washing → clean (updates Supabase immediately)
 - Empty state when no items
 
-### [ ] Feature 4 — Wardrobe tab: add & edit items
+### [x] Feature 4 — Wardrobe tab: add & edit items
 - "Add item" floating button (bottom right, above nav)
 - Add item modal: fields for name, category (select), colour (text), season (select), brand (text), care notes (textarea), laundry status (select), photo upload
-- Photo upload: `<input type="file" accept="image/*" capture="environment">` — upload to Supabase Storage bucket `wardrobe-images`, save public URL to item record
+- Photo upload: `<input type="file" accept="image/*" capture="environment">` — before uploading, compress the image client-side using a canvas element: draw the image onto a canvas at max 800px wide (maintain aspect ratio), export as JPEG at quality 0.7, convert to blob, then upload the compressed blob to Supabase Storage bucket `wardrobe-images`. Save the public URL to the item record.
 - Tap item card → item detail view (full screen or modal): shows all fields, full photo, wear count, last worn date, care notes
 - Edit button on detail view → pre-filled edit modal
 - Delete button on detail view → confirmation then delete from Supabase (also delete image from storage)
 
-### [ ] Feature 5 — Outfits tab: display & create
+### [x] Feature 5 — Outfits tab: display & create
 - Fetch outfits from Supabase in `js/outfits.js`
-- Render as grid — each outfit card shows overlapping item photo thumbnails (stacked with slight offset), outfit name, AI rating badge if rated
+- Render as grid — each outfit card shows overlapping item photo thumbnails (stacked with slight offset), outfit name
 - Create outfit button → modal: search/pick items from wardrobe (show item thumbnails, tap to select/deselect), name the outfit, save
 - "Worn today" button on each outfit card → create outfit_log entry, increment wear_count on all items in the outfit, update last_worn to today
 
-### [ ] Feature 6 — AI outfit rating
-- Implement `js/ai.js` with a `rateOutfit(outfit, items)` function
-- Calls Anthropic API via fetch with header `anthropic-dangerous-direct-browser-access: true`
-- Prompt: rate outfit out of 10 and give 2 sentences of honest style feedback like a fashion editor
-- Send: outfit name + list of item names, colours, categories
-- Parse response, save `ai_rating` and `ai_feedback` to the outfit record in Supabase
-- Show rating and feedback on outfit card and detail view
-- "Rate with AI" button on each outfit (re-rateable)
-- Use model: `claude-sonnet-4-20250514`, max_tokens: 300
+### [skip] Feature 6 — AI outfit rating
+- Skipped: no Anthropic API key available (Claude Pro plan does not include API access)
 
-### [ ] Feature 7 — Plan tab: calendar
+### [x] Feature 7 — Plan tab: calendar
 - Implement `js/plan.js`
 - Monthly calendar view — current month shown by default, prev/next month navigation
 - Fetch planned_outfits for the visible month
@@ -248,7 +239,7 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 - Add PWA meta tags to both `index.html` and `app.html`
 - Generate a simple `icon.png` (192x192, solid #4a5e3a) using a Python script or canvas — save to root
 - Verify manifest.json is complete and correct
-- Write `README.md` with: Supabase setup steps, how to run schema.sql, storage bucket setup, how to fill in config.js, GitHub Pages deployment steps, how to add to iPhone home screen (Safari → Share → Add to Home Screen), how to get Anthropic API key, security note about config.js
+- Write `README.md` with: Supabase setup steps, how to run schema.sql, storage bucket setup, how to fill in config.js, GitHub Pages deployment steps, how to add to iPhone home screen (Safari → Share → Add to Home Screen), security note about config.js
 
 ---
 
@@ -259,3 +250,4 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 - config.js is gitignored — user fills it in manually after cloning
 - Keep all JS files focused on their single responsibility
 - The app is single-user — no sharing, no multi-user features
+- No AI/Anthropic integration — Feature 6 is skipped
