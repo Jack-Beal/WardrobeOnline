@@ -7,11 +7,11 @@ function exportWardrobePDF() {
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.text('My Wardrobe Export', 20, 20);
+  doc.text(`My Wardrobe Export — ${today}`, 20, 20);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.text(`Generated for AI analysis — ${today}`, 20, 28);
+  doc.text('Generated for AI analysis', 20, 28);
 
   // Group items by category
   const groups = {};

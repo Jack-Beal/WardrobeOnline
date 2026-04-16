@@ -225,7 +225,7 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 
 ### [x] Feature 12 — Weather & outfit suggestions
 
-### [ ] Feature 13 — Subcategory refactor
+### [x] Feature 13 — Subcategory refactor
 Update the entire codebase to use the two-level category system defined above. Do all of the following in one go:
 
 **app.js**
@@ -253,7 +253,7 @@ Update the entire codebase to use the two-level category system defined above. D
 **style.css**
 - Remove all trips-related CSS: `.trips-section`, `.trips-header`, `.trips-header-title`, `.trips-collapse-btn`, `.trips-list-body`, `.trips-empty`, `.trip-card`, `.trip-card-info`, `.trip-card-name`, `.trip-card-dates`, `.modal-sheet-tall`, `.modal-subtitle`, `.trip-day-row`, `.trip-day-date`, `.trip-day-right`, `.trip-day-thumbs`, `.trip-thumb`, `.trip-detail-actions`, `.packing-category`, `.packing-category-title`, `.packing-item`, `.packing-checkbox`, `.packing-item-info`, `.packing-item-name`, `.packing-item-sub`
 
-### [ ] Feature 14 — Stats tab
+### [x] Feature 14 — Stats tab
 - Implement `js/stats.js` fully, replacing the placeholder
 - Summary metric cards at top: total items, total outfits, total outfit logs this month
 - Most worn: top 5 items by wear_count, shown as a ranked list with emoji, item name, subcategory badge, wear count
@@ -263,13 +263,13 @@ Update the entire codebase to use the two-level category system defined above. D
 - Outfit history: compact current-month calendar view with dots on days that have outfit_log entries; no month navigation needed
 - "Export PDF" button at bottom that calls `exportWardrobePDF()`
 
-### [ ] Feature 15 — PDF export
+### [x] Feature 15 — PDF export
 - Implement `js/pdf.js` fully
 - Expose a global `exportWardrobePDF()` function
 - PDF: title "My Wardrobe Export — [date]", subtitle "Generated for AI analysis", items grouped by subcategory, each item: name · colour · brand · worn N× · care notes
 - Trigger browser download on generation
 
-### [ ] Feature 16 — PWA polish & README
+### [x] Feature 16 — PWA polish & README
 - Verify manifest.json is complete with correct start_url, icons, theme_color
 - Generate icon.png (192x192, solid #4a5e3a background, white 👗 emoji centred) using an HTML canvas script — save to root
 - Add any missing PWA meta tags to index.html and app.html

@@ -40,12 +40,12 @@
         <!-- Filter chips -->
         <div class="filter-chips" id="category-chips">
           <button class="chip active" data-category="all">All</button>
+          <button class="chip inactive" data-category="Outerwear">Outerwear</button>
+          <button class="chip inactive" data-category="Jumpers &amp; Hoodies">Jumpers &amp; Hoodies</button>
           <button class="chip inactive" data-category="Tops">Tops</button>
           <button class="chip inactive" data-category="Bottoms">Bottoms</button>
           <button class="chip inactive" data-category="Shoes">Shoes</button>
-          <button class="chip inactive" data-category="Outerwear">Outerwear</button>
           <button class="chip inactive" data-category="Accessories">Accessories</button>
-          <button class="chip inactive" data-category="Bags">Bags</button>
         </div>
 
         <!-- Secondary filters -->
@@ -220,12 +220,43 @@
             <label for="item-category">Category *</label>
             <select id="item-category" required>
               <option value="">Select category</option>
-              <option>Tops</option>
-              <option>Bottoms</option>
-              <option>Shoes</option>
-              <option>Outerwear</option>
-              <option>Accessories</option>
-              <option>Bags</option>
+              <optgroup label="Outerwear">
+                <option>Windbreaker</option>
+                <option>Coat</option>
+              </optgroup>
+              <optgroup label="Jumpers &amp; Hoodies">
+                <option>Knitwear</option>
+                <option>Jumper</option>
+                <option>Hoodie</option>
+              </optgroup>
+              <optgroup label="Tops">
+                <option>T-Shirt</option>
+                <option>Graphic Tee</option>
+                <option>Shirt</option>
+              </optgroup>
+              <optgroup label="Bottoms">
+                <option>Joggers</option>
+                <option>Jeans</option>
+                <option>Cargos</option>
+                <option>Other Bottoms</option>
+              </optgroup>
+              <optgroup label="Shoes">
+                <option>Trainers</option>
+                <option>Boots</option>
+                <option>Formal Shoes</option>
+                <option>Sandals</option>
+                <option>Slippers</option>
+              </optgroup>
+              <optgroup label="Accessories">
+                <option>Cap</option>
+                <option>Beanie</option>
+                <option>Scarf</option>
+                <option>Belt</option>
+                <option>Bag</option>
+                <option>Watch</option>
+                <option>Sunglasses</option>
+                <option>Jewellery</option>
+              </optgroup>
             </select>
           </div>
 
@@ -392,73 +423,14 @@
         </div>
         <div class="filter-chips" id="shop-category-chips" style="margin-bottom:16px">
           <button class="chip active" data-category="all">All</button>
+          <button class="chip inactive" data-category="Outerwear">Outerwear</button>
+          <button class="chip inactive" data-category="Jumpers &amp; Hoodies">Jumpers &amp; Hoodies</button>
           <button class="chip inactive" data-category="Tops">Tops</button>
           <button class="chip inactive" data-category="Bottoms">Bottoms</button>
           <button class="chip inactive" data-category="Shoes">Shoes</button>
-          <button class="chip inactive" data-category="Outerwear">Outerwear</button>
           <button class="chip inactive" data-category="Accessories">Accessories</button>
-          <button class="chip inactive" data-category="Bags">Bags</button>
         </div>
         <div id="shop-items-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== CREATE TRIP MODAL ===== -->
-  <div class="modal-overlay" id="create-trip-overlay">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <h2 class="modal-title">New trip</h2>
-        <button class="modal-close" id="create-trip-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <form id="create-trip-form" novalidate>
-          <div class="form-group">
-            <label for="trip-name">Trip name *</label>
-            <input type="text" id="trip-name" placeholder="e.g. Amsterdam weekend">
-          </div>
-          <div class="form-group">
-            <label for="trip-start-date">Start date *</label>
-            <input type="date" id="trip-start-date">
-          </div>
-          <div class="form-group">
-            <label for="trip-end-date">End date *</label>
-            <input type="date" id="trip-end-date">
-          </div>
-          <div id="create-trip-error" class="error-msg"></div>
-          <button type="submit" class="btn btn-primary mt-12" id="create-trip-save-btn">Create trip</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== TRIP DETAIL MODAL ===== -->
-  <div class="modal-overlay" id="trip-detail-overlay">
-    <div class="modal-sheet modal-sheet-tall">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <div>
-          <h2 class="modal-title" id="trip-detail-name">Trip</h2>
-          <p class="modal-subtitle" id="trip-detail-dates"></p>
-        </div>
-        <button class="modal-close" id="trip-detail-close">✕</button>
-      </div>
-      <div class="modal-body" id="trip-detail-body" style="overflow-y:auto;flex:1"></div>
-    </div>
-  </div>
-
-  <!-- ===== PACKING LIST MODAL ===== -->
-  <div class="modal-overlay" id="packing-list-overlay">
-    <div class="modal-sheet modal-sheet-tall">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <h2 class="modal-title" id="packing-list-title">Packing list</h2>
-        <button class="modal-close" id="packing-list-close">✕</button>
-      </div>
-      <div class="modal-body" style="overflow-y:auto;flex:1">
-        <div id="packing-list-content"></div>
-        <button class="btn btn-secondary mt-16" id="packing-copy-btn" style="width:100%">Copy to clipboard</button>
       </div>
     </div>
   </div>

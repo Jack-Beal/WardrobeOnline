@@ -78,14 +78,25 @@ function onTabActivated(tabName) {
 
 // ===== HELPERS shared across modules =====
 
+const CATEGORY_GROUPS = {
+  'Windbreaker': 'Outerwear', 'Coat': 'Outerwear',
+  'Knitwear': 'Jumpers & Hoodies', 'Jumper': 'Jumpers & Hoodies', 'Hoodie': 'Jumpers & Hoodies',
+  'T-Shirt': 'Tops', 'Graphic Tee': 'Tops', 'Shirt': 'Tops',
+  'Joggers': 'Bottoms', 'Jeans': 'Bottoms', 'Cargos': 'Bottoms', 'Other Bottoms': 'Bottoms',
+  'Trainers': 'Shoes', 'Boots': 'Shoes', 'Formal Shoes': 'Shoes', 'Sandals': 'Shoes', 'Slippers': 'Shoes',
+  'Cap': 'Accessories', 'Beanie': 'Accessories', 'Scarf': 'Accessories', 'Belt': 'Accessories',
+  'Bag': 'Accessories', 'Watch': 'Accessories', 'Sunglasses': 'Accessories', 'Jewellery': 'Accessories',
+};
+
 function categoryEmoji(category) {
   const map = {
-    Tops:        '👕',
-    Bottoms:     '👖',
-    Shoes:       '👟',
-    Outerwear:   '🧥',
-    Accessories: '💍',
-    Bags:        '👜',
+    'Windbreaker': '🧥', 'Coat': '🧥',
+    'Knitwear': '🧶', 'Jumper': '🧡', 'Hoodie': '👕',
+    'T-Shirt': '👕', 'Graphic Tee': '👕', 'Shirt': '👔',
+    'Joggers': '👖', 'Jeans': '👖', 'Cargos': '👖', 'Other Bottoms': '👖',
+    'Trainers': '👟', 'Boots': '🥾', 'Formal Shoes': '👞', 'Sandals': '🩴', 'Slippers': '🩴',
+    'Cap': '🧢', 'Beanie': '🎩', 'Scarf': '🧣', 'Belt': '👔',
+    'Bag': '👜', 'Watch': '⌚', 'Sunglasses': '🕶', 'Jewellery': '💍',
   };
   return map[category] || '👗';
 }

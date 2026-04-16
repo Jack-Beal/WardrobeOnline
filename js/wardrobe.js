@@ -36,7 +36,7 @@ async function loadWardrobe() {
 
 function applyFilters() {
   filteredItems = wardrobeItems.filter(item => {
-    if (activeCategory !== 'all' && item.category !== activeCategory) return false;
+    if (activeCategory !== 'all' && CATEGORY_GROUPS[item.category] !== activeCategory) return false;
     if (activeColour   && item.colour.toLowerCase() !== activeColour.toLowerCase())           return false;
     if (activeBrand    && (item.brand || '').toLowerCase() !== activeBrand.toLowerCase())    return false;
     if (activeLaundry  && (item.laundry_status || 'clean') !== activeLaundry)               return false;

@@ -60,10 +60,10 @@ document.getElementById('suggest-outfit-btn').addEventListener('click', () => {
     note = `${temp}°C — mild day. Light outfit suggestion.`;
   }
 
-  // Pick one item per category from allItems
+  // Pick one item per group from allItems
   const picked = [];
-  categories.forEach(cat => {
-    const match = (allItems || []).find(i => i.category === cat && !picked.includes(i));
+  categories.forEach(group => {
+    const match = (allItems || []).find(i => CATEGORY_GROUPS[i.category] === group && !picked.includes(i));
     if (match) picked.push(match);
   });
 
@@ -143,7 +143,7 @@ function renderShopList() {
   let items = allItems || [];
 
   if (shopColour)            items = items.filter(i => i.colour === shopColour);
-  if (shopCategory !== 'all') items = items.filter(i => i.category === shopCategory);
+  if (shopCategory !== 'all') items = items.filter(i => CATEGORY_GROUPS[i.category] === shopCategory);
 
   if (items.length === 0) {
     list.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;margin-top:8px">No items match.</p>';
