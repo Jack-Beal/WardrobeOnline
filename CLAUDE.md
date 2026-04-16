@@ -66,7 +66,7 @@ Apply consistently across all pages and components.
 ### Layout
 - Mobile-first, max-width 430px, centred on desktop
 - Bottom nav: 4 tabs — Wardrobe, Outfits, Plan, Stats
-- Cards: 14px border-radius, 3/4 aspect ratio for clothing photos
+- Cards: 14px border-radius
 - Staggered grid: 3 columns, nth-child(2) gets margin-top: 14px, nth-child(3) gets margin-top: -8px — repeating pattern for eclectic feel
 - Subtle paper texture on body: use CSS `background-image` with a repeating noise pattern (pure CSS, no image files)
 - Primary button: background #4a5e3a, colour #f5f0e8, border-radius 20px
@@ -84,10 +84,8 @@ create table items (
   name text not null,
   category text not null,
   colour text not null,
-  season text not null,
   brand text,
   care_notes text,
-  image_url text,
   laundry_status text default 'clean',
   wear_count integer default 0,
   last_worn date,
@@ -99,8 +97,6 @@ create table outfits (
   user_id uuid references auth.users not null,
   name text not null,
   item_ids uuid[] not null,
-  ai_rating numeric,
-  ai_feedback text,
   created_at timestamptz default now()
 );
 
@@ -122,28 +118,27 @@ create table planned_outfits (
   planned_date date not null,
   created_at timestamptz default now()
 );
-
-create table trips (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users not null,
-  name text not null,
-  start_date date not null,
-  end_date date not null,
-  created_at timestamptz default now()
-);
-
-create table trip_days (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references trips on delete cascade,
-  day_date date not null,
-  outfit_id uuid references outfits,
-  item_ids uuid[]
-);
 ```
 
 Enable RLS on all tables. Each table needs a policy: authenticated users can only SELECT/INSERT/UPDATE/DELETE their own rows where `user_id = auth.uid()`.
 
-Storage: bucket called `wardrobe-images`, public read access.
+---
+
+## Colour options
+The colour field is always a `<select>` dropdown — never a free-text input. Use exactly these options:
+
+```
+Black, White, Grey, Navy, Blue, Light Blue, Green, Khaki, Olive,
+Brown, Tan, Beige, Cream, Red, Burgundy, Pink, Purple, Orange, Yellow, Multicolour
+```
+
+---
+
+## Key constraints
+- No photos — items have no image_url field, no file uploads, no Supabase Storage
+- No season — items have no season field, no season filter anywhere
+- Colour is always a dropdown select, never free-text
+- No AI integration — Feature 6 is skipped
 
 ---
 
@@ -158,65 +153,93 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 ### [x] Feature 3 — Wardrobe tab: display & filters
 
 ### [x] Feature 4 — Wardrobe tab: add & edit items
-- "Add item" floating button (bottom right, above nav)
-- Add item modal: fields for name, category (select), colour (text), season (select), brand (text), care notes (textarea), laundry status (select), photo upload
-- Photo upload: `<input type="file" accept="image/*" capture="environment">` — before uploading, compress the image client-side using a canvas element: draw the image onto a canvas at max 800px wide (maintain aspect ratio), export as JPEG at quality 0.7, convert to blob, then upload the compressed blob to Supabase Storage bucket `wardrobe-images`. Save the public URL to the item record.
-- Tap item card → item detail view (full screen or modal): shows all fields, full photo, wear count, last worn date, care notes
-- Edit button on detail view → pre-filled edit modal
-- Delete button on detail view → confirmation then delete from Supabase (also delete image from storage)
 
 ### [x] Feature 5 — Outfits tab: display & create
-- Fetch outfits from Supabase in `js/outfits.js`
-- Render as grid — each outfit card shows overlapping item photo thumbnails (stacked with slight offset), outfit name
-- Create outfit button → modal: search/pick items from wardrobe (show item thumbnails, tap to select/deselect), name the outfit, save
-- "Worn today" button on each outfit card → create outfit_log entry, increment wear_count on all items in the outfit, update last_worn to today
 
 ### [skip] Feature 6 — AI outfit rating
 
 ### [x] Feature 7 — Plan tab: calendar
-- Implement `js/plan.js`
-- Monthly calendar view — current month shown by default, prev/next month navigation
-- Fetch planned_outfits for the visible month
-- Each day cell shows a small colour dot if an outfit is planned
-- Tap a day → day detail panel: shows planned outfit (if any) with item thumbnails, or empty with "Plan outfit" button
-- "Plan outfit" → pick from saved outfits or build from individual items → saves to planned_outfits table
-- "Mark as worn" button on a planned day → creates outfit_log, updates wear counts, marks day as worn (visual indicator)
 
-### [ ] Feature 8 — Plan tab: trips & packing lists
-- Trips section below calendar (collapsible)
-- Create trip: name, start date, end date
-- Trip detail: day-by-day list between start and end dates, each day can have an assigned outfit (pick from saved outfits or build from items)
-- "Generate packing list" button → collects all unique items across all trip days, groups by category, displays as a checklist
-- Packing list can be dismissed or exported (plain text copy or included in PDF export)
+### [ ] Feature 8 — Bug fixes
+Fix all of the following in one go:
 
-### [ ] Feature 9 — Weather & outfit suggestions
+**app.html**
+- Remove the season `<select>` from the secondary filters section
+- Replace the colour `<input type="text">` in the add/edit item form with a `<select>` using the colour options listed above
+- Remove the "Season" row from the item detail overlay
+- Remove the photo upload `<div class="form-group">` block (file input, preview image) from the item form
+- Remove `detail-photo`, `detail-photo-placeholder`, and the back-button wrapper `<div style="position:relative">` from the item detail overlay — replace with a simple emoji placeholder `<div class="item-detail-icon" id="detail-icon">` at the top of item-detail-content
+
+**wardrobe.js**
+- Remove `activeSeason`, all season filter logic, and the `filter-season` event listener
+- Remove season from form validation and the submit payload
+- Remove `populateSecondaryFilterOptions` season block
+- Replace colour `<input>` handling in `openItemModal` and submit with `<select>` value
+- Remove `uploadedImageUrl`, `isSubmittingItem` photo branch, `compressImage` function, and all storage upload code
+- Remove `image_url` from the insert/update payload
+- Update `buildItemCard`: remove photo `<img>` branch — cards always show the emoji placeholder
+- Update `openItemDetail`: remove `detail-photo`/`detail-photo-placeholder` logic; set `detail-icon` to `categoryEmoji(item.category)`; remove the Season row population
+- Update `detail-delete-btn` handler: remove the storage image deletion block
+
+**outfits.js**
+- Remove all `image_url` / photo thumbnail references from `buildOutfitCard` and `populateItemPicker`
+- Outfit thumbnails always use `outfit-thumb-placeholder` with `categoryEmoji`
+- Item picker cards always use the `.item-picker-placeholder` emoji div, never an `<img>`
+
+**plan.js**
+- Remove all `image_url` / photo thumbnail references from `openDayDetail` and `populatePlanItemPicker`
+- All thumbnails use emoji placeholders only
+
+**supabase/schema.sql**
+- Remove `season`, `image_url` columns from items table
+- Remove `ai_rating`, `ai_feedback` columns from outfits table
+- Remove trips and trip_days tables and their RLS policies
+- Remove the Storage bucket section comment
+
+### [ ] Feature 9 — Edit & delete outfits
+- Each outfit card gets an edit (✏️) and delete (🗑) icon button in the top-right corner of the card
+- Edit: opens a modal pre-filled with the outfit name and currently selected items; user can rename and change item selection; save calls Supabase update on the outfits row; reload the outfits grid
+- Delete: shows a confirm prompt, then deletes the row from Supabase; reload the outfits grid
+
+### [ ] Feature 10 — Log individual items as worn
+- On the item detail view, add a "Worn today" button below the existing edit/delete action row
+- Tapping it: increments wear_count by 1, sets last_worn to today's date in Supabase, updates the matching item in the local allItems cache, and shows "✓ Logged!" briefly on the button before resetting
+- No outfit_log entry needed — this is a quick single-item wear log only
+
+### [ ] Feature 11 — Laundry status filter
+- Add a laundry `<select>` to the secondary filters in app.html alongside the colour and brand selects
+- Options: `<option value="">All statuses</option>`, Clean, Dirty, In wash (values: clean, dirty, washing)
+- Wire up in wardrobe.js as `activeLaundry`; filter items where `item.laundry_status === activeLaundry` when set
+- Works alongside the existing category, colour, and brand filters
+
+### [ ] Feature 12 — Weather & outfit suggestions
 - Implement `js/weather.js`
 - Fetch from Open-Meteo on wardrobe tab load: `https://api.open-meteo.com/v1/forecast?latitude=56.462&longitude=-2.9707&current=temperature_2m,weathercode&timezone=Europe/London`
-- Show weather strip at top of wardrobe tab: temperature, condition text, weather icon (CSS-only icon or simple emoji mapping)
-- "Suggest outfit" button → filter wardrobe items by season and logic: if temp <8°C prioritise outerwear; if temp 8-15°C suggest layering; if rain (weathercode 51-67) flag waterproof items; pick a suggested combination and display it
-- "Shop my wardrobe" button → modal: enter colour and/or category → shows matching items you already own
+- Show weather strip at top of wardrobe tab: temperature, condition text, weather emoji. Silently fail if fetch fails.
+- "Suggest outfit" button → logic: if temp <8°C prioritise items with category Outerwear; if 8–15°C suggest a Top + Bottom + Outerwear combo; if >15°C suggest Top + Bottom; if rain (weathercode 51–67) add a note flagging waterproof items. Pick matching items from allItems and display the suggestion in a simple modal showing item names and category badges.
+- "Shop my wardrobe" button → modal with a colour dropdown (the standard colour list) and category chip filters; shows matching items from allItems as a simple list of name + category badge
 
-### [ ] Feature 10 — Stats tab
+### [ ] Feature 13 — Stats tab
 - Implement `js/stats.js`
-- Summary metric cards: total items, total outfits, total outfit logs this month
-- Most worn items: top 5 by wear_count, shown as a ranked list with photo thumbnails
-- Forgotten items: items with wear_count = 0 or last_worn > 60 days ago — shown with a nudge message
-- "Haven't worn in 30 days" list
-- Style stats: most worn colour (horizontal bar chart, pure CSS no library), most worn category, most worn brand
-- Outfit history calendar: compact month view, dots on days where outfit_logs exist
+- Summary metric cards at top: total items, total outfits, total outfit logs this month
+- Most worn: top 5 items by wear_count, shown as a ranked list with item name, category badge, and wear count
+- Forgotten items: items where wear_count = 0 or last_worn > 60 days ago — shown as a list with a nudge message
+- Haven't worn in 30 days: separate list
+- Style stats section: most worn colour, most worn category, most worn brand — each as a horizontal CSS bar chart (no library)
+- Outfit history: compact month calendar view with dots on days that have outfit_log entries
+- "Export PDF" button at the bottom that calls `exportWardrobePDF()` from pdf.js
 
-### [ ] Feature 11 — PDF export
+### [ ] Feature 14 — PDF export
 - Implement `js/pdf.js` using jsPDF from CDN: `https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js`
-- "Export wardrobe PDF" button in Stats tab
-- PDF contents: title "My Wardrobe Export — [date]", items grouped by category, each item: name, colour, brand, wear count, care notes
-- Note at top: "Generated for AI analysis"
+- Expose a global `exportWardrobePDF()` function called by the Stats tab button
+- PDF contents: title "My Wardrobe Export — [date]", subtitle "Generated for AI analysis", items grouped by category, each item on its own line: name · colour · brand · worn N× · care notes
 - Trigger browser download on generation
 
-### [ ] Feature 12 — PWA polish & README
-- Add PWA meta tags to both `index.html` and `app.html`
-- Generate a simple `icon.png` (192x192, solid #4a5e3a) using a Python script or canvas — save to root
-- Verify manifest.json is complete and correct
-- Write `README.md` with: Supabase setup steps, how to run schema.sql, storage bucket setup, how to fill in config.js, GitHub Pages deployment steps, how to add to iPhone home screen (Safari → Share → Add to Home Screen), security note about config.js
+### [ ] Feature 15 — PWA polish & README
+- Verify manifest.json is complete with correct start_url, icons, theme_color
+- Generate icon.png (192x192, solid #4a5e3a background, white 👗 emoji centred) using an HTML canvas script — save to root
+- Add any missing PWA meta tags to index.html and app.html
+- Write README.md: Supabase project setup, how to run schema.sql, how to fill in config.js from config.example.js, GitHub Pages deployment steps, how to add to iPhone home screen, security note about never committing config.js
 
 ---
 
@@ -227,4 +250,6 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 - config.js is gitignored — user fills it in manually after cloning
 - Keep all JS files focused on their single responsibility
 - The app is single-user — no sharing, no multi-user features
-- No AI/Anthropic integration — Feature 6 is skipped
+- No photos, no image_url, no Supabase Storage — item cards use categoryEmoji placeholders only
+- No season field anywhere in the app
+- Colour is always a dropdown select using the fixed colour list above
