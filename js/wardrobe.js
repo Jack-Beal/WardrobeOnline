@@ -1,5 +1,15 @@
 // Wardrobe tab — fetch, render, filter, add/edit/delete items.
 
+// ===== SUBCATEGORY MAP =====
+const SUBCATEGORY_MAP = {
+  'Outerwear':        ['Windbreaker', 'Coat'],
+  'Jumpers & Hoodies':['Knitwear', 'Jumper', 'Hoodie'],
+  'Tops':             ['T-Shirt', 'Graphic Tee', 'Shirt'],
+  'Bottoms':          ['Joggers', 'Jeans', 'Cargos', 'Other Bottoms'],
+  'Shoes':            ['Trainers', 'Boots', 'Formal Shoes', 'Sandals', 'Slippers'],
+  'Accessories':      ['Cap', 'Beanie', 'Scarf', 'Belt', 'Bag', 'Watch', 'Sunglasses', 'Jewellery'],
+};
+
 // ===== STATE =====
 let wardrobeItems       = [];  // full list from Supabase
 let filteredItems       = [];
@@ -298,17 +308,41 @@ document.getElementById('item-modal-overlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('item-modal-overlay')) closeItemModal();
 });
 
+function populateSubcategorySelect(group, selectedSub) {
+  const subSelect  = document.getElementById('item-category');
+  const subWrapper = document.getElementById('item-subcategory-group');
+  const subs       = SUBCATEGORY_MAP[group] || [];
+
+  subSelect.innerHTML = '<option value="">Select subcategory</option>';
+  subs.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    if (s === selectedSub) opt.selected = true;
+    subSelect.appendChild(opt);
+  });
+
+  subWrapper.style.display = subs.length ? '' : 'none';
+}
+
+document.getElementById('item-category-group').addEventListener('change', (e) => {
+  populateSubcategorySelect(e.target.value, '');
+});
+
 function openItemModal(item) {
   editingItemId = item ? item.id : null;
 
   document.getElementById('item-modal-title').textContent = item ? 'Edit item' : 'Add item';
-  document.getElementById('item-id').value          = item ? item.id       : '';
-  document.getElementById('item-name').value         = item ? item.name     : '';
-  document.getElementById('item-category').value     = item ? item.category : '';
-  document.getElementById('item-colour').value       = item ? item.colour   : '';
-  document.getElementById('item-brand').value        = item ? (item.brand || '') : '';
-  document.getElementById('item-care').value         = item ? (item.care_notes || '') : '';
-  document.getElementById('item-laundry').value      = item ? (item.laundry_status || 'clean') : 'clean';
+  document.getElementById('item-id').value     = item ? item.id           : '';
+  document.getElementById('item-name').value   = item ? item.name         : '';
+  document.getElementById('item-colour').value = item ? item.colour       : '';
+  document.getElementById('item-brand').value  = item ? (item.brand || '') : '';
+  document.getElementById('item-care').value   = item ? (item.care_notes || '') : '';
+  document.getElementById('item-laundry').value = item ? (item.laundry_status || 'clean') : 'clean';
+
+  const group = item ? (CATEGORY_GROUPS[item.category] || '') : '';
+  document.getElementById('item-category-group').value = group;
+  populateSubcategorySelect(group, item ? item.category : '');
 
   hideFormError();
   document.getElementById('item-modal-overlay').classList.add('open');
