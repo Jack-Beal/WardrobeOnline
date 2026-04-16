@@ -1,9 +1,10 @@
-// Outfits tab — display, create, worn today.
+// Outfits tab — display, create, edit, delete.
 
 // ===== STATE =====
 let outfitsData      = [];
 let selectedItemIds  = new Set();
 let isSavingOutfit   = false;
+let editingOutfitId  = null;
 
 // ===== LOAD & RENDER =====
 
@@ -51,30 +52,40 @@ function renderOutfitsGrid() {
 function buildOutfitCard(outfit) {
   const card = document.createElement('div');
   card.className = 'outfit-card';
+  card.style.position = 'relative';
 
-  // Overlapping thumbnails — resolve up to 4 item images
+  // Edit / delete buttons
+  const actions = document.createElement('div');
+  actions.className = 'outfit-card-actions';
+  actions.innerHTML = `
+    <button class="outfit-card-action-btn" title="Edit outfit">✏️</button>
+    <button class="outfit-card-action-btn" title="Delete outfit">🗑</button>
+  `;
+  actions.querySelectorAll('button')[0].addEventListener('click', (e) => {
+    e.stopPropagation();
+    openOutfitModal(outfit);
+  });
+  actions.querySelectorAll('button')[1].addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (!confirm(`Delete "${outfit.name}"? This cannot be undone.`)) return;
+    await supabaseClient.from('outfits').delete().eq('id', outfit.id).eq('user_id', currentUser.id);
+    loadOutfits();
+  });
+  card.appendChild(actions);
+
+  // Overlapping thumbnails
   const thumbsEl = document.createElement('div');
   thumbsEl.className = 'outfit-thumbnails';
 
   const itemIds = (outfit.item_ids || []).slice(0, 4);
   itemIds.forEach(id => {
     const item = allItems.find(i => i.id === id);
-    if (item && item.image_url) {
-      const img = document.createElement('img');
-      img.className = 'outfit-thumb';
-      img.src = item.image_url;
-      img.alt = item.name;
-      img.loading = 'lazy';
-      thumbsEl.appendChild(img);
-    } else {
-      const ph = document.createElement('div');
-      ph.className = 'outfit-thumb-placeholder';
-      ph.textContent = item ? categoryEmoji(item.category) : '👗';
-      thumbsEl.appendChild(ph);
-    }
+    const ph = document.createElement('div');
+    ph.className = 'outfit-thumb-placeholder';
+    ph.textContent = item ? categoryEmoji(item.category) : '👗';
+    thumbsEl.appendChild(ph);
   });
 
-  // Fallback if no items resolved
   if (itemIds.length === 0) {
     const ph = document.createElement('div');
     ph.className = 'outfit-thumb-placeholder';
@@ -118,7 +129,6 @@ async function markWornToday(outfit, btn) {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  // Insert outfit_log
   const { error: logErr } = await supabaseClient.from('outfit_logs').insert({
     user_id:   currentUser.id,
     outfit_id: outfit.id,
@@ -133,10 +143,8 @@ async function markWornToday(outfit, btn) {
     return;
   }
 
-  // Increment wear_count and set last_worn on each item
   const itemIds = outfit.item_ids || [];
   if (itemIds.length > 0) {
-    // Fetch current wear counts
     const { data: items } = await supabaseClient
       .from('items')
       .select('id, wear_count')
@@ -153,7 +161,6 @@ async function markWornToday(outfit, btn) {
       ));
     }
 
-    // Update local allItems cache
     allItems = allItems.map(item => {
       if (itemIds.includes(item.id)) {
         return { ...item, wear_count: (item.wear_count || 0) + 1, last_worn: today };
@@ -167,18 +174,23 @@ async function markWornToday(outfit, btn) {
   setTimeout(() => { btn.textContent = 'Worn today'; }, 2000);
 }
 
-// ===== CREATE OUTFIT MODAL =====
+// ===== CREATE / EDIT OUTFIT MODAL =====
 
-document.getElementById('outfits-fab').addEventListener('click', openOutfitModal);
+document.getElementById('outfits-fab').addEventListener('click', () => openOutfitModal(null));
 document.getElementById('outfit-modal-close').addEventListener('click', closeOutfitModal);
 document.getElementById('outfit-modal-overlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('outfit-modal-overlay')) closeOutfitModal();
 });
 
-function openOutfitModal() {
-  selectedItemIds = new Set();
-  document.getElementById('outfit-name').value = '';
+function openOutfitModal(outfit) {
+  editingOutfitId = outfit ? outfit.id : null;
+  selectedItemIds = outfit ? new Set(outfit.item_ids || []) : new Set();
+
+  document.getElementById('outfit-modal-title').textContent = outfit ? 'Edit outfit' : 'New outfit';
+  document.getElementById('outfit-name').value = outfit ? outfit.name : '';
   document.getElementById('outfit-item-search').value = '';
+  document.getElementById('outfit-save-btn').textContent = outfit ? 'Save changes' : 'Save outfit';
+
   hideOutfitError();
   updateSelectedCount();
   populateItemPicker('');
@@ -188,9 +200,9 @@ function openOutfitModal() {
 function closeOutfitModal() {
   document.getElementById('outfit-modal-overlay').classList.remove('open');
   selectedItemIds = new Set();
+  editingOutfitId = null;
 }
 
-// Item search filter
 document.getElementById('outfit-item-search').addEventListener('input', (e) => {
   populateItemPicker(e.target.value.trim().toLowerCase());
 });
@@ -199,7 +211,6 @@ function populateItemPicker(query) {
   const grid = document.getElementById('outfit-item-picker');
   grid.innerHTML = '';
 
-  // Ensure wardrobe is loaded
   if (!allItems || allItems.length === 0) {
     grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;grid-column:1/-1">Add items to your wardrobe first.</p>';
     return;
@@ -223,18 +234,10 @@ function populateItemPicker(query) {
     card.className = 'item-picker-card' + (selectedItemIds.has(item.id) ? ' selected' : '');
     card.dataset.id = item.id;
 
-    if (item.image_url) {
-      const img = document.createElement('img');
-      img.src = item.image_url;
-      img.alt = item.name;
-      img.loading = 'lazy';
-      card.appendChild(img);
-    } else {
-      const ph = document.createElement('div');
-      ph.className = 'item-picker-placeholder';
-      ph.textContent = categoryEmoji(item.category);
-      card.appendChild(ph);
-    }
+    const ph = document.createElement('div');
+    ph.className = 'item-picker-placeholder';
+    ph.textContent = categoryEmoji(item.category);
+    card.appendChild(ph);
 
     const check = document.createElement('div');
     check.className = 'check-overlay';
@@ -287,34 +290,32 @@ document.getElementById('outfit-save-btn').addEventListener('click', async () =>
   hideOutfitError();
 
   const name = document.getElementById('outfit-name').value.trim();
-  if (!name) {
-    showOutfitError('Please give the outfit a name.');
-    return;
-  }
-  if (selectedItemIds.size === 0) {
-    showOutfitError('Select at least one item.');
-    return;
-  }
+  if (!name) { showOutfitError('Please give the outfit a name.'); return; }
+  if (selectedItemIds.size === 0) { showOutfitError('Select at least one item.'); return; }
 
   isSavingOutfit = true;
   const btn = document.getElementById('outfit-save-btn');
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
-  const { error } = await supabaseClient.from('outfits').insert({
-    user_id:  currentUser.id,
-    name,
-    item_ids: [...selectedItemIds],
-  });
+  const payload = { name, item_ids: [...selectedItemIds] };
+  let error;
+
+  if (editingOutfitId) {
+    ({ error } = await supabaseClient
+      .from('outfits')
+      .update(payload)
+      .eq('id', editingOutfitId)
+      .eq('user_id', currentUser.id));
+  } else {
+    ({ error } = await supabaseClient.from('outfits').insert({ ...payload, user_id: currentUser.id }));
+  }
 
   isSavingOutfit = false;
   btn.disabled = false;
-  btn.textContent = 'Save outfit';
+  btn.textContent = editingOutfitId ? 'Save changes' : 'Save outfit';
 
-  if (error) {
-    showOutfitError('Save failed: ' + error.message);
-    return;
-  }
+  if (error) { showOutfitError('Save failed: ' + error.message); return; }
 
   closeOutfitModal();
   loadOutfits();

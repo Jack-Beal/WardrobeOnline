@@ -160,7 +160,7 @@ Work through these one at a time. Mark [x] when done, stop, and wait for "next".
 
 ### [x] Feature 7 — Plan tab: calendar
 
-### [ ] Feature 8 — Bug fixes
+### [x] Feature 8 — Bug fixes
 Fix all of the following in one go:
 
 **app.html**
@@ -196,23 +196,23 @@ Fix all of the following in one go:
 - Remove trips and trip_days tables and their RLS policies
 - Remove the Storage bucket section comment
 
-### [ ] Feature 9 — Edit & delete outfits
+### [x] Feature 9 — Edit & delete outfits
 - Each outfit card gets an edit (✏️) and delete (🗑) icon button in the top-right corner of the card
 - Edit: opens a modal pre-filled with the outfit name and currently selected items; user can rename and change item selection; save calls Supabase update on the outfits row; reload the outfits grid
 - Delete: shows a confirm prompt, then deletes the row from Supabase; reload the outfits grid
 
-### [ ] Feature 10 — Log individual items as worn
+### [x] Feature 10 — Log individual items as worn
 - On the item detail view, add a "Worn today" button below the existing edit/delete action row
 - Tapping it: increments wear_count by 1, sets last_worn to today's date in Supabase, updates the matching item in the local allItems cache, and shows "✓ Logged!" briefly on the button before resetting
 - No outfit_log entry needed — this is a quick single-item wear log only
 
-### [ ] Feature 11 — Laundry status filter
+### [x] Feature 11 — Laundry status filter
 - Add a laundry `<select>` to the secondary filters in app.html alongside the colour and brand selects
 - Options: `<option value="">All statuses</option>`, Clean, Dirty, In wash (values: clean, dirty, washing)
 - Wire up in wardrobe.js as `activeLaundry`; filter items where `item.laundry_status === activeLaundry` when set
 - Works alongside the existing category, colour, and brand filters
 
-### [ ] Feature 12 — Weather & outfit suggestions
+### [x] Feature 12 — Weather & outfit suggestions
 - Implement `js/weather.js`
 - Fetch from Open-Meteo on wardrobe tab load: `https://api.open-meteo.com/v1/forecast?latitude=56.462&longitude=-2.9707&current=temperature_2m,weathercode&timezone=Europe/London`
 - Show weather strip at top of wardrobe tab: temperature, condition text, weather emoji. Silently fail if fetch fails.

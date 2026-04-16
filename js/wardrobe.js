@@ -5,12 +5,10 @@ let wardrobeItems       = [];  // full list from Supabase
 let filteredItems       = [];
 let activeCategory      = 'all';
 let activeColour        = '';
-let activeSeason        = '';
 let activeBrand         = '';
+let activeLaundry       = '';
 let currentDetailItem   = null;
 let editingItemId       = null;
-let uploadedImageUrl    = null;
-let isSubmittingItem    = false;
 
 // ===== LOAD & RENDER =====
 
@@ -39,9 +37,9 @@ async function loadWardrobe() {
 function applyFilters() {
   filteredItems = wardrobeItems.filter(item => {
     if (activeCategory !== 'all' && item.category !== activeCategory) return false;
-    if (activeColour  && item.colour.toLowerCase()   !== activeColour.toLowerCase())  return false;
-    if (activeSeason  && item.season                 !== activeSeason)                return false;
-    if (activeBrand   && (item.brand || '').toLowerCase() !== activeBrand.toLowerCase()) return false;
+    if (activeColour   && item.colour.toLowerCase() !== activeColour.toLowerCase())           return false;
+    if (activeBrand    && (item.brand || '').toLowerCase() !== activeBrand.toLowerCase())    return false;
+    if (activeLaundry  && (item.laundry_status || 'clean') !== activeLaundry)               return false;
     return true;
   });
   renderWardrobeGrid();
@@ -51,7 +49,7 @@ function renderWardrobeGrid() {
   const container = document.getElementById('wardrobe-grid-container');
 
   if (filteredItems.length === 0) {
-    const isFiltered = activeCategory !== 'all' || activeColour || activeSeason || activeBrand;
+    const isFiltered = activeCategory !== 'all' || activeColour || activeBrand || activeLaundry;
     container.innerHTML = `
       <div class="empty-state">
         <span class="empty-state-icon">👗</span>
@@ -77,20 +75,11 @@ function buildItemCard(item) {
   card.className = 'item-card';
   card.dataset.id = item.id;
 
-  // Photo
-  if (item.image_url) {
-    const img = document.createElement('img');
-    img.className = 'item-card-photo';
-    img.src = item.image_url;
-    img.alt = item.name;
-    img.loading = 'lazy';
-    card.appendChild(img);
-  } else {
-    const ph = document.createElement('div');
-    ph.className = 'item-card-photo-placeholder';
-    ph.textContent = categoryEmoji(item.category);
-    card.appendChild(ph);
-  }
+  // Emoji placeholder
+  const ph = document.createElement('div');
+  ph.className = 'item-card-photo-placeholder';
+  ph.textContent = categoryEmoji(item.category);
+  card.appendChild(ph);
 
   // Body
   const body = document.createElement('div');
@@ -200,8 +189,8 @@ document.getElementById('filter-colour').addEventListener('change', (e) => {
   applyFilters();
 });
 
-document.getElementById('filter-season').addEventListener('change', (e) => {
-  activeSeason = e.target.value;
+document.getElementById('filter-laundry').addEventListener('change', (e) => {
+  activeLaundry = e.target.value;
   applyFilters();
 });
 
@@ -225,19 +214,7 @@ function openItemDetail(item) {
 
   const overlay = document.getElementById('item-detail-overlay');
 
-  // Photo
-  const photo = document.getElementById('detail-photo');
-  const ph    = document.getElementById('detail-photo-placeholder');
-  if (item.image_url) {
-    photo.src = item.image_url;
-    photo.style.display = 'block';
-    ph.style.display = 'none';
-  } else {
-    photo.style.display = 'none';
-    ph.style.display = 'flex';
-    ph.textContent = categoryEmoji(item.category);
-  }
-
+  document.getElementById('detail-icon').textContent = categoryEmoji(item.category);
   document.getElementById('detail-name').textContent = item.name;
 
   // Meta badges
@@ -248,7 +225,6 @@ function openItemDetail(item) {
   `;
 
   document.getElementById('detail-colour').textContent     = item.colour;
-  document.getElementById('detail-season').textContent     = item.season;
   document.getElementById('detail-brand').textContent      = item.brand || '—';
   document.getElementById('detail-wear-count').textContent = item.wear_count || 0;
   document.getElementById('detail-last-worn').textContent  = formatDate(item.last_worn);
@@ -274,19 +250,43 @@ document.getElementById('detail-delete-btn').addEventListener('click', async () 
 
   const item = currentDetailItem;
 
-  // Delete image from storage if present
-  if (item.image_url) {
-    const path = item.image_url.split('/wardrobe-images/')[1];
-    if (path) {
-      await supabaseClient.storage.from('wardrobe-images').remove([path]);
-    }
-  }
-
   await supabaseClient.from('items').delete().eq('id', item.id).eq('user_id', currentUser.id);
 
   document.getElementById('item-detail-overlay').classList.remove('open');
   currentDetailItem = null;
   loadWardrobe();
+});
+
+// ===== WORN TODAY (single item) =====
+
+document.getElementById('detail-worn-btn').addEventListener('click', async () => {
+  if (!currentDetailItem) return;
+  const btn = document.getElementById('detail-worn-btn');
+  btn.disabled = true;
+  btn.textContent = 'Logging…';
+
+  const today = new Date().toISOString().slice(0, 10);
+  const item  = currentDetailItem;
+
+  await supabaseClient
+    .from('items')
+    .update({ wear_count: (item.wear_count || 0) + 1, last_worn: today })
+    .eq('id', item.id)
+    .eq('user_id', currentUser.id);
+
+  // Update local caches
+  item.wear_count = (item.wear_count || 0) + 1;
+  item.last_worn  = today;
+  allItems = allItems.map(i => i.id === item.id ? item : i);
+  wardrobeItems = wardrobeItems.map(i => i.id === item.id ? item : i);
+
+  // Refresh detail view counts
+  document.getElementById('detail-wear-count').textContent = item.wear_count;
+  document.getElementById('detail-last-worn').textContent  = formatDate(item.last_worn);
+
+  btn.disabled = false;
+  btn.textContent = '✓ Logged!';
+  setTimeout(() => { btn.textContent = 'Worn today'; }, 2000);
 });
 
 // ===== ADD / EDIT MODAL =====
@@ -299,36 +299,16 @@ document.getElementById('item-modal-overlay').addEventListener('click', (e) => {
 });
 
 function openItemModal(item) {
-  editingItemId    = item ? item.id : null;
-  uploadedImageUrl = item ? item.image_url : null;
+  editingItemId = item ? item.id : null;
 
   document.getElementById('item-modal-title').textContent = item ? 'Edit item' : 'Add item';
   document.getElementById('item-id').value          = item ? item.id       : '';
   document.getElementById('item-name').value         = item ? item.name     : '';
   document.getElementById('item-category').value     = item ? item.category : '';
   document.getElementById('item-colour').value       = item ? item.colour   : '';
-  document.getElementById('item-season').value       = item ? item.season   : '';
   document.getElementById('item-brand').value        = item ? (item.brand || '') : '';
   document.getElementById('item-care').value         = item ? (item.care_notes || '') : '';
   document.getElementById('item-laundry').value      = item ? (item.laundry_status || 'clean') : 'clean';
-
-  // Photo preview
-  const preview  = document.getElementById('photo-preview');
-  const label    = document.getElementById('file-input-label');
-  if (item && item.image_url) {
-    preview.src = item.image_url;
-    preview.classList.add('visible');
-    label.textContent = '📷 Change photo';
-    label.classList.add('has-file');
-  } else {
-    preview.src = '';
-    preview.classList.remove('visible');
-    label.textContent = '📷 Tap to add photo';
-    label.classList.remove('has-file');
-  }
-
-  // Reset file input
-  document.getElementById('item-photo').value = '';
 
   hideFormError();
   document.getElementById('item-modal-overlay').classList.add('open');
@@ -336,22 +316,8 @@ function openItemModal(item) {
 
 function closeItemModal() {
   document.getElementById('item-modal-overlay').classList.remove('open');
-  editingItemId    = null;
-  uploadedImageUrl = null;
+  editingItemId = null;
 }
-
-// Photo preview on file select
-document.getElementById('item-photo').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const label = document.getElementById('file-input-label');
-  label.textContent = `📷 ${file.name}`;
-  label.classList.add('has-file');
-
-  const preview = document.getElementById('photo-preview');
-  preview.src = URL.createObjectURL(file);
-  preview.classList.add('visible');
-});
 
 function showFormError(msg) {
   const el = document.getElementById('item-form-error');
@@ -365,116 +331,33 @@ function hideFormError() {
   el.classList.remove('visible');
 }
 
-// ===== IMAGE COMPRESSION =====
-
-function compressImage(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-
-      const MAX_WIDTH = 800;
-      let width  = img.width;
-      let height = img.height;
-
-      if (width > MAX_WIDTH) {
-        height = Math.round(height * MAX_WIDTH / width);
-        width  = MAX_WIDTH;
-      }
-
-      const canvas  = document.createElement('canvas');
-      canvas.width  = width;
-      canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Canvas compression failed'));
-        },
-        'image/jpeg',
-        0.7
-      );
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('Could not load image'));
-    };
-
-    img.src = objectUrl;
-  });
-}
-
 // ===== FORM SUBMIT =====
 
 document.getElementById('item-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (isSubmittingItem) return;
 
   hideFormError();
 
   const name     = document.getElementById('item-name').value.trim();
   const category = document.getElementById('item-category').value;
-  const colour   = document.getElementById('item-colour').value.trim();
-  const season   = document.getElementById('item-season').value;
+  const colour   = document.getElementById('item-colour').value;
 
-  if (!name || !category || !colour || !season) {
+  if (!name || !category || !colour) {
     showFormError('Please fill in all required fields.');
     return;
   }
 
-  isSubmittingItem = true;
   const btn = document.getElementById('item-submit-btn');
   btn.disabled = true;
   btn.textContent = 'Saving…';
-
-  // Compress and upload photo if a new file was selected
-  const fileInput = document.getElementById('item-photo');
-  const file = fileInput.files[0];
-
-  if (file) {
-    let blob;
-    try {
-      blob = await compressImage(file);
-    } catch (err) {
-      showFormError('Image processing failed: ' + err.message);
-      isSubmittingItem = false;
-      btn.disabled = false;
-      btn.textContent = 'Save item';
-      return;
-    }
-
-    const path = `${currentUser.id}/${Date.now()}.jpg`;
-    const { error: uploadErr } = await supabaseClient.storage
-      .from('wardrobe-images')
-      .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
-
-    if (uploadErr) {
-      showFormError('Photo upload failed: ' + uploadErr.message);
-      isSubmittingItem = false;
-      btn.disabled = false;
-      btn.textContent = 'Save item';
-      return;
-    }
-
-    const { data: urlData } = supabaseClient.storage
-      .from('wardrobe-images')
-      .getPublicUrl(path);
-    uploadedImageUrl = urlData.publicUrl;
-  }
 
   const payload = {
     name,
     category,
     colour,
-    season,
     brand:          document.getElementById('item-brand').value.trim() || null,
     care_notes:     document.getElementById('item-care').value.trim()  || null,
     laundry_status: document.getElementById('item-laundry').value,
-    image_url:      uploadedImageUrl || null,
     user_id:        currentUser.id,
   };
 
@@ -492,7 +375,6 @@ document.getElementById('item-form').addEventListener('submit', async (e) => {
     dbError = error;
   }
 
-  isSubmittingItem = false;
   btn.disabled = false;
   btn.textContent = 'Save item';
 

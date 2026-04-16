@@ -34,6 +34,7 @@
           <span class="weather-temp" id="weather-temp">--°C</span>
           <span id="weather-condition">Loading...</span>
           <button class="btn btn-sm btn-ghost" style="margin-left:auto" id="suggest-outfit-btn">Suggest outfit</button>
+          <button class="btn btn-sm btn-ghost" id="shop-wardrobe-btn">Shop</button>
         </div>
 
         <!-- Filter chips -->
@@ -57,13 +58,11 @@
             <select class="filter-select" id="filter-colour">
               <option value="">All colours</option>
             </select>
-            <select class="filter-select" id="filter-season">
-              <option value="">All seasons</option>
-              <option value="Spring">Spring</option>
-              <option value="Summer">Summer</option>
-              <option value="Autumn">Autumn</option>
-              <option value="Winter">Winter</option>
-              <option value="All Season">All Season</option>
+            <select class="filter-select" id="filter-laundry">
+              <option value="">All statuses</option>
+              <option value="clean">Clean</option>
+              <option value="dirty">Dirty</option>
+              <option value="washing">In wash</option>
             </select>
             <select class="filter-select" id="filter-brand">
               <option value="">All brands</option>
@@ -232,18 +231,28 @@
 
           <div class="form-group">
             <label for="item-colour">Colour *</label>
-            <input type="text" id="item-colour" placeholder="e.g. White" required>
-          </div>
-
-          <div class="form-group">
-            <label for="item-season">Season *</label>
-            <select id="item-season" required>
-              <option value="">Select season</option>
-              <option>Spring</option>
-              <option>Summer</option>
-              <option>Autumn</option>
-              <option>Winter</option>
-              <option>All Season</option>
+            <select id="item-colour" required>
+              <option value="">Select colour</option>
+              <option>Black</option>
+              <option>White</option>
+              <option>Grey</option>
+              <option>Navy</option>
+              <option>Blue</option>
+              <option>Light Blue</option>
+              <option>Green</option>
+              <option>Khaki</option>
+              <option>Olive</option>
+              <option>Brown</option>
+              <option>Tan</option>
+              <option>Beige</option>
+              <option>Cream</option>
+              <option>Red</option>
+              <option>Burgundy</option>
+              <option>Pink</option>
+              <option>Purple</option>
+              <option>Orange</option>
+              <option>Yellow</option>
+              <option>Multicolour</option>
             </select>
           </div>
 
@@ -266,15 +275,6 @@
             </select>
           </div>
 
-          <div class="form-group">
-            <label>Photo</label>
-            <div class="file-input-wrapper">
-              <div class="file-input-label" id="file-input-label">📷 Tap to add photo</div>
-              <input type="file" id="item-photo" accept="image/*" capture="environment">
-            </div>
-            <img class="photo-preview" id="photo-preview" alt="Preview">
-          </div>
-
           <div id="item-form-error" class="error-msg"></div>
 
           <button type="submit" class="btn btn-primary mt-16" id="item-submit-btn">Save item</button>
@@ -288,7 +288,7 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">New outfit</h2>
+        <h2 class="modal-title" id="outfit-modal-title">New outfit</h2>
         <button class="modal-close" id="outfit-modal-close">✕</button>
       </div>
       <div class="modal-body">
@@ -314,11 +314,8 @@
 
   <!-- ===== ITEM DETAIL VIEW ===== -->
   <div class="item-detail-overlay" id="item-detail-overlay">
-    <div style="position:relative">
-      <img class="item-detail-photo" id="detail-photo" alt="" style="display:none">
-      <div class="item-detail-photo-placeholder" id="detail-photo-placeholder">👗</div>
-      <button class="item-detail-back" id="detail-back-btn">←</button>
-    </div>
+    <div class="item-detail-icon" id="detail-icon">👗</div>
+    <button class="item-detail-back" id="detail-back-btn">←</button>
     <div class="item-detail-content">
       <h1 class="item-detail-name" id="detail-name"></h1>
       <div class="item-detail-meta" id="detail-meta"></div>
@@ -326,10 +323,6 @@
       <div class="item-detail-row">
         <span class="item-detail-row-label">Colour</span>
         <span id="detail-colour"></span>
-      </div>
-      <div class="item-detail-row">
-        <span class="item-detail-row-label">Season</span>
-        <span id="detail-season"></span>
       </div>
       <div class="item-detail-row">
         <span class="item-detail-row-label">Brand</span>
@@ -355,6 +348,117 @@
       <div class="item-detail-actions">
         <button class="btn btn-secondary" id="detail-edit-btn">Edit</button>
         <button class="btn btn-danger" id="detail-delete-btn">Delete</button>
+      </div>
+      <button class="btn btn-primary" id="detail-worn-btn" style="width:100%;margin-top:10px">Worn today</button>
+    </div>
+  </div>
+
+  <!-- ===== SUGGEST OUTFIT MODAL ===== -->
+  <div class="modal-overlay" id="suggest-modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" id="suggest-modal-title">Outfit suggestion</h2>
+        <button class="modal-close" id="suggest-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="suggest-weather-note" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px"></p>
+        <div id="suggest-items-list"></div>
+        <p id="suggest-rain-note" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:12px;padding:10px;background:var(--surface-alt);border-radius:8px">☔ Rain expected — consider waterproof outerwear.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SHOP MY WARDROBE MODAL ===== -->
+  <div class="modal-overlay" id="shop-modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">Shop my wardrobe</h2>
+        <button class="modal-close" id="shop-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:12px">
+          <select id="shop-colour-filter" class="filter-select" style="width:100%">
+            <option value="">All colours</option>
+            <option>Black</option><option>White</option><option>Grey</option>
+            <option>Navy</option><option>Blue</option><option>Light Blue</option>
+            <option>Green</option><option>Khaki</option><option>Olive</option>
+            <option>Brown</option><option>Tan</option><option>Beige</option>
+            <option>Cream</option><option>Red</option><option>Burgundy</option>
+            <option>Pink</option><option>Purple</option><option>Orange</option>
+            <option>Yellow</option><option>Multicolour</option>
+          </select>
+        </div>
+        <div class="filter-chips" id="shop-category-chips" style="margin-bottom:16px">
+          <button class="chip active" data-category="all">All</button>
+          <button class="chip inactive" data-category="Tops">Tops</button>
+          <button class="chip inactive" data-category="Bottoms">Bottoms</button>
+          <button class="chip inactive" data-category="Shoes">Shoes</button>
+          <button class="chip inactive" data-category="Outerwear">Outerwear</button>
+          <button class="chip inactive" data-category="Accessories">Accessories</button>
+          <button class="chip inactive" data-category="Bags">Bags</button>
+        </div>
+        <div id="shop-items-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CREATE TRIP MODAL ===== -->
+  <div class="modal-overlay" id="create-trip-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">New trip</h2>
+        <button class="modal-close" id="create-trip-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="create-trip-form" novalidate>
+          <div class="form-group">
+            <label for="trip-name">Trip name *</label>
+            <input type="text" id="trip-name" placeholder="e.g. Amsterdam weekend">
+          </div>
+          <div class="form-group">
+            <label for="trip-start-date">Start date *</label>
+            <input type="date" id="trip-start-date">
+          </div>
+          <div class="form-group">
+            <label for="trip-end-date">End date *</label>
+            <input type="date" id="trip-end-date">
+          </div>
+          <div id="create-trip-error" class="error-msg"></div>
+          <button type="submit" class="btn btn-primary mt-12" id="create-trip-save-btn">Create trip</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TRIP DETAIL MODAL ===== -->
+  <div class="modal-overlay" id="trip-detail-overlay">
+    <div class="modal-sheet modal-sheet-tall">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title" id="trip-detail-name">Trip</h2>
+          <p class="modal-subtitle" id="trip-detail-dates"></p>
+        </div>
+        <button class="modal-close" id="trip-detail-close">✕</button>
+      </div>
+      <div class="modal-body" id="trip-detail-body" style="overflow-y:auto;flex:1"></div>
+    </div>
+  </div>
+
+  <!-- ===== PACKING LIST MODAL ===== -->
+  <div class="modal-overlay" id="packing-list-overlay">
+    <div class="modal-sheet modal-sheet-tall">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" id="packing-list-title">Packing list</h2>
+        <button class="modal-close" id="packing-list-close">✕</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;flex:1">
+        <div id="packing-list-content"></div>
+        <button class="btn btn-secondary mt-16" id="packing-copy-btn" style="width:100%">Copy to clipboard</button>
       </div>
     </div>
   </div>
